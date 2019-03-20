@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Upload Files</title>
+<script src="/siofu/client.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+
+<style>
+    #file_drop {
+        background-color: aquamarine;
+        text-align: center;
+        margin: 20px;
+        padding: 50px;
+        border: 4px dotted black;
+        color: white;
+    };
+
+    #upload_btn h1 {
+        background-color: aqua;
+        margin: 20px;
+        padding: 50px;
+        color: white
+    }
+
+    #myProgress {
+        width: 100%;
+        background-color: grey;
+    }
+
+    #myBar {
+        width: 1%;
+        height: 30px;
+        background-color: green;
+    }
+</style>
+
+<script type="text/javascript">
+document.addEventListener("DOMContentLoaded", function(){
+
+    // Initialize instances:
+    var socket = io.connect();
+    var uploader = new SocketIOFileUpload(socket);
+    let percent;
+
+    // Configure the three ways that SocketIOFileUpload can read files:
+    document.getElementById("upload_btn").addEventListener("click", uploader.prompt, false);
+    uploader.listenOnInput(document.getElementById("upload_input"));
+    uploader.listenOnDrop(document.getElementById("file_drop"));
+
+    // Do something on upload progress:
+    uploader.addEventListener("progress", function(event){
+        percent = event.bytesLoaded / event.file.size * 100;
+        move();
+        console.log("File is", percent.toFixed(2), "percent loaded");
+    });
+
+    function move() {
+        var elem = document.getElementById("myBar"); 
+        var width = 1;
+        var id = setInterval(frame, 10);
+        function frame() {
+            if (width >= 100) {
+                clearInterval(id);
+            } else {
+                width += percent.toFixed(2);
+                console.log('width :', width);
+                elem.style.width = width + '%'; 
+            }
+        }
+    }
+
+    // Do something when a file is uploaded:
+    uploader.addEventListener("complete", function(event){
+        console.log(event.success);
+        console.log(event.file);
+    });
+
+}, false);
+</script>
+
+</head>
+<body>
+
+    <p><label>Choose File: <input type="file" id="upload_input"/></label></p>
+    <div id="file_drop" dropzone="copy" title="drop files for upload">
+        <h1 id="upload_btn">Prompt for File</h1>
+    </div>
+
+    <div id="myProgress">
+        <div id="myBar"></div>
+    </div>
+
+    <button onclick="move()">Click Me</button> 
+
+
+</body>
+</html>
